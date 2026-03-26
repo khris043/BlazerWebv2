@@ -50,11 +50,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\html practice\\BlazorApp1\\BlazorApp1\\BlazorApp1.csproj",
+      "projectUniqueName": "C:\\html practice\\BlazerWebv2\\BlazorApp1\\BlazorApp1\\BlazorApp1.csproj",
       "projectName": "BlazorApp1",
-      "projectPath": "C:\\html practice\\BlazorApp1\\BlazorApp1\\BlazorApp1.csproj",
+      "projectPath": "C:\\html practice\\BlazerWebv2\\BlazorApp1\\BlazorApp1\\BlazorApp1.csproj",
       "packagesPath": "C:\\Users\\khris\\.nuget\\packages\\",
-      "outputPath": "C:\\html practice\\BlazorApp1\\BlazorApp1\\obj\\",
+      "outputPath": "C:\\html practice\\BlazerWebv2\\BlazorApp1\\BlazorApp1\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\khris\\AppData\\Roaming\\NuGet\\NuGet.Config"
