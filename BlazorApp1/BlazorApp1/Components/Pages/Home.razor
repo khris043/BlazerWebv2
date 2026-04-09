@@ -7,7 +7,7 @@
 
 <div id="mainContent" style="padding: 32px 8vw; box-sizing: border-box;">
 	<h1>Welcome to Soburd</h1>
-	<p id="introText">here you'll learn about what we do, how we do it, and publish blog posts through Azure + Blazor CRUD.</p>
+	<p id="introText">here you'll learn about what we do and how we do it. </p>
 
 	<div id="hiddenContent">
 			<div class="info-flex">
@@ -63,7 +63,7 @@
 				<tr>
 					<td><span class="bubble">Khris Patel</span></td>
 					<td><span class="bubble">Lead Developer</span></td>
-					<td><span class="bubble">10 years</span></td>
+					<td><span class="bubble">3 years</span></td>
 				</tr>
 				<tr>
 					<td><span class="bubble">Fill Smith</span></td>
@@ -89,7 +89,7 @@
 
 			<h2>Contact Us</h2>
 			<p>If you're interested in learning more about our services or would like to discuss a potential project, please don't hesitate to contact us. We look forward to hearing from you!</p>
-			<p>us at: khrispatel2894@yahoo.com<br>or call yours truly at: 620-605-0019</p>
+			<p>at: khrispatel2894@yahoo.com<br>or call yours truly at: 620-605-0019</p>
 
 			<div class="crud-wrap">
 				<h2>Blog Post Manager (Create / Read / Update / Delete)</h2>
@@ -222,12 +222,11 @@
 	}
 
 	.info-flex {
-		display: flex;
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: 24px;
-		justify-content: space-between;
-		flex-wrap: wrap;
 		margin-bottom: 24px;
-		align-items: flex-start;
+		align-items: stretch;
 	}
 
 	.info-box {
@@ -236,11 +235,10 @@
 		border: 2px solid #0fbfd6;
 		border-radius: 16px;
 		padding: 20px;
-		flex: 1 1 250px;
-		min-width: 250px;
-		max-width: 350px;
+		min-width: 0;
+		max-width: none;
 		box-sizing: border-box;
-		margin-bottom: 12px;
+		height: 100%;
 		box-shadow: 1px 2px 8px rgba(42, 141, 47, 0.733);
 	}
 
@@ -443,8 +441,7 @@
 
 	@@media (max-width: 1100px) {
 		.info-flex {
-			flex-direction: column;
-			gap: 16px;
+			grid-template-columns: 1fr;
 		}
 
 		.info-box {
