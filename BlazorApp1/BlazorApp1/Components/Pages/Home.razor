@@ -6,31 +6,10 @@
 <PageTitle>Soburd Blog</PageTitle>
 
 <div id="mainContent" style="padding: 32px 8vw; box-sizing: border-box;">
-	<h1>Welcome to Soburd <span id="surveyPrompt" style="display:@(surveyComplete ? "none" : "inline")">but First Tell Me About Yourself</span></h1>
-	<p id="introText" style="display:@(surveyComplete ? "block" : "none")">here you'll learn about what we do, how we do it, and publish blog posts through Azure + Blazor CRUD.</p>
+	<h1>Welcome to Soburd</h1>
+	<p id="introText">here you'll learn about what we do, how we do it, and publish blog posts through Azure + Blazor CRUD.</p>
 
-	@if (!surveyComplete)
-	{
-		<div id="surveySection">
-			<p>Please take a moment to fill out this survey about yourself.</p>
-			<div>
-				<input type="checkbox" id="question1" />
-				<label for="question1"> I Like Soundboards</label><br>
-				<input type="checkbox" id="question2" />
-				<label for="question2"> I Like Memes</label><br>
-				<input type="checkbox" id="question3" />
-				<label for="question3"> I Like Annoying My Friends</label><br>
-				<input type="checkbox" id="question4" />
-				<label for="question4"> I Like Trains</label>
-				<br><br>
-				<button class="action-btn" @onclick="CompleteSurvey">Submit</button>
-			</div>
-		</div>
-	}
-
-	@if (surveyComplete)
-	{
-		<div id="hiddenContent">
+	<div id="hiddenContent">
 			<div class="info-flex">
 				<div class="info-box">
 					<h2>What we do</h2>
@@ -189,7 +168,6 @@
 				}
 			</div>
 		</div>
-	}
 </div>
 
 <style>
@@ -357,8 +335,7 @@
 	}
 
 	#carousel-container button,
-	.action-btn,
-	#surveySection button {
+	.action-btn {
 		padding: 8px 16px;
 		border-radius: 8px;
 		border: none;
@@ -371,17 +348,8 @@
 	}
 
 	#carousel-container button:hover,
-	.action-btn:hover,
-	#surveySection button:hover {
+	.action-btn:hover {
 		background: #444;
-	}
-
-	#surveySection input[type="checkbox"] {
-		accent-color: #222;
-	}
-
-	#surveySection input[type="checkbox"]:checked {
-		accent-color: #0fbfd6;
 	}
 
 	.msg {
@@ -511,7 +479,6 @@
 	private readonly BlazorApp1.Models.BlogPost newPost = new();
 	private BlazorApp1.Models.BlogPost editingPost = new();
 	private bool isEditing;
-	private bool surveyComplete;
 	private string? successMessage;
 	private string? errorMessage;
 
@@ -543,11 +510,6 @@
 				StateHasChanged();
 			});
 		}, null, 4000, 4000);
-	}
-
-	private void CompleteSurvey()
-	{
-		surveyComplete = true;
 	}
 
 	private void PrevImage()
