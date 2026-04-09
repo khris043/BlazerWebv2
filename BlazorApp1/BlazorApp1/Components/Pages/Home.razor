@@ -1,7 +1,672 @@
 ﻿@page "/"
+@page "/blog"
+@implements IDisposable
+@inject BlazorApp1.Services.BlogDataService BlogDataService
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Soburd Blog</PageTitle>
 
-<h1>WASSUP BRUH</h1>
+<div id="mainContent" style="padding: 32px 8vw; box-sizing: border-box;">
+	<h1>Welcome to Soburd <span id="surveyPrompt" style="display:@(surveyComplete ? "none" : "inline")">but First Tell Me About Yourself</span></h1>
+	<p id="introText" style="display:@(surveyComplete ? "block" : "none")">here you'll learn about what we do, how we do it, and publish blog posts through Azure + Blazor CRUD.</p>
 
-WASSSSSSSSUPPPPPPPPP!!!!!!!!!
+	@if (!surveyComplete)
+	{
+		<div id="surveySection">
+			<p>Please take a moment to fill out this survey about yourself.</p>
+			<div>
+				<input type="checkbox" id="question1" />
+				<label for="question1"> I Like Soundboards</label><br>
+				<input type="checkbox" id="question2" />
+				<label for="question2"> I Like Memes</label><br>
+				<input type="checkbox" id="question3" />
+				<label for="question3"> I Like Annoying My Friends</label><br>
+				<input type="checkbox" id="question4" />
+				<label for="question4"> I Like Trains</label>
+				<br><br>
+				<button class="action-btn" @onclick="CompleteSurvey">Submit</button>
+			</div>
+		</div>
+	}
+
+	@if (surveyComplete)
+	{
+		<div id="hiddenContent">
+			<div class="info-flex">
+				<div class="info-box">
+					<h2>What we do</h2>
+					<p>We are a software development company that works to fill in "crutial" missing parts of the internet. Our team of "experienced" developers work closely with "stuff" to understand their use and deliver high-quality products that exceed expectations.</p>
+					<details>
+						<summary>Click to see fun facts about our team &#x25BC;</summary>
+						<ul>
+							<li>Khris loves to mess around with things until he learns about them</li>
+							<li>Fill loves making random squads in games.</li>
+							<li>Mike likes to dance on Jynxi's head.</li>
+						</ul>
+						<img src="Devteam.jpg" alt="Development Team" style="max-width:200px; border-radius:12px; margin-top:8px;">
+					</details>
+				</div>
+
+				<div class="info-box">
+					<h2>How we do it</h2>
+					<p>We follow a structured development process that includes requirements gathering, design, development, testing, and deployment. Our "team" uses the latest technologies and best practices to ensure that our products are reliable, scalable, and secure.</p>
+					<details>
+						<summary>Click to see fun facts about our team &#x25BC;</summary>
+						<ul>
+							<li>Khris spent many years in theatre to realize that sounds are one of his favorite things.</li>
+							<li>Fill loves making random squads in games.</li>
+							<li>Mike loves to play Fortnite with Neil.</li>
+						</ul>
+						<img src="Devteam3.jpeg" alt="Development Team" style="max-width:200px; border-radius:12px; margin-top:8px;">
+					</details>
+				</div>
+
+				<div class="info-box">
+					<h2>Our Team</h2>
+					<p>Our team is made up of "experienced developers" and idiots who are passionate about creating innovative solutions. We work like loners to ensure that every project is a success half of the time.</p>
+					<details>
+						<summary>Click to see even more fun facts about our team &#x25BC;</summary>
+						<ul>
+							<li>Khris once stayed up for 24 hours straight!</li>
+							<li>Fill loves making Neil angry.</li>
+							<li>Mike sketches UI ideas on Neil's GIANT FOREHEAD.</li>
+						</ul>
+						<img src="Devteam2.jpeg" alt="Development Team" style="max-width:200px; border-radius:12px; margin-top:8px;">
+					</details>
+				</div>
+			</div>
+
+			<table>
+				<tr>
+					<th>Name</th>
+					<th>Role</th>
+					<th>Experience</th>
+				</tr>
+				<tr>
+					<td><span class="bubble">Khris Patel</span></td>
+					<td><span class="bubble">Lead Developer</span></td>
+					<td><span class="bubble">10 years</span></td>
+				</tr>
+				<tr>
+					<td><span class="bubble">Fill Smith</span></td>
+					<td><span class="bubble">Squad Randomizer</span></td>
+					<td><span class="bubble">8 years</span></td>
+				</tr>
+				<tr>
+					<td><span class="bubble">Mike Johnson</span></td>
+					<td><span class="bubble">UI/UX Designer</span></td>
+					<td><span class="bubble">5 years</span></td>
+				</tr>
+			</table>
+
+			<div id="carousel-container">
+				<div id="carousel-image-container">
+					<img id="carousel-image" src="@CarouselImages[currentImageIndex]" alt="Carousel Image">
+				</div>
+				<div style="margin-top:12px;">
+					<button @onclick="PrevImage">&#8592; Prev</button>
+					<button @onclick="NextImage">Next &#8594;</button>
+				</div>
+			</div>
+
+			<h2>Contact Us</h2>
+			<p>If you're interested in learning more about our services or would like to discuss a potential project, please don't hesitate to contact us. We look forward to hearing from you!</p>
+			<p>us at: khrispatel2894@yahoo.com<br>or call yours truly at: 620-605-0019</p>
+
+			<div class="crud-wrap">
+				<h2>Blog Post Manager (Create / Read / Update / Delete)</h2>
+				<p class="small">Azure SQL connected through App Service settings. Total posts: @posts.Count</p>
+
+				@if (!string.IsNullOrWhiteSpace(successMessage))
+				{
+					<div class="msg ok">@successMessage</div>
+				}
+
+				@if (!string.IsNullOrWhiteSpace(errorMessage))
+				{
+					<div class="msg err">@errorMessage</div>
+				}
+
+				@if (isEditing)
+				{
+					<h3>Editing Post #@editingPost.Id</h3>
+					<EditForm Model="editingPost" OnValidSubmit="UpdatePostAsync">
+						<label>Title</label>
+						<InputText @bind-Value="editingPost.Title" />
+
+						<label>Author</label>
+						<InputText @bind-Value="editingPost.Author" />
+
+						<label>Content</label>
+						<InputTextArea @bind-Value="editingPost.Content" rows="6" />
+
+						<br><br>
+						<button class="action-btn" type="submit">Save Update</button>
+						<button class="action-btn" type="button" @onclick="CancelEdit">Cancel</button>
+					</EditForm>
+				}
+				else
+				{
+					<h3>Create a New Post</h3>
+					<EditForm Model="newPost" OnValidSubmit="CreatePostAsync">
+						<label>Title</label>
+						<InputText @bind-Value="newPost.Title" />
+
+						<label>Author</label>
+						<InputText @bind-Value="newPost.Author" />
+
+						<label>Content</label>
+						<InputTextArea @bind-Value="newPost.Content" rows="6" />
+
+						<br><br>
+						<button class="action-btn" type="submit">Publish Post</button>
+					</EditForm>
+				}
+			</div>
+
+			<h2>Published Posts</h2>
+			<div class="post-grid">
+				@if (posts.Count == 0)
+				{
+					<article class="post-card">
+						<h3>No posts yet</h3>
+						<div class="post-content">Publish your first post using the form above.</div>
+					</article>
+				}
+				else
+				{
+					@foreach (var post in posts)
+					{
+						<article class="post-card">
+							<h3>@post.Title</h3>
+							<div class="post-meta">By @post.Author | @post.CreatedAt.ToString("yyyy-MM-dd HH:mm")</div>
+							<div class="post-content">@post.Content</div>
+							<div class="post-actions">
+								<button class="action-btn" @onclick="() => StartEdit(post)">Edit</button>
+								<button class="action-btn danger" @onclick="() => DeletePostAsync(post.Id)">Delete</button>
+							</div>
+						</article>
+					}
+				}
+			</div>
+		</div>
+	}
+</div>
+
+<style>
+	#hiddenContent {
+		padding: 32px 8vw;
+		box-sizing: border-box;
+	}
+
+	html, body {
+		height: 100%;
+		min-height: 100%;
+		margin: 0;
+		padding: 0;
+	}
+
+	body {
+		background-image: url('ChatGPTMusic.png');
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center -113px;
+		background-attachment: fixed;
+		background-color: #f0f0f0;
+		font-family: 'Times New Roman', Times, serif;
+		font-size: 18px;
+		min-height: 100vh;
+		color: skyblue;
+		box-sizing: border-box;
+	}
+
+	.bubble {
+		display: inline-block;
+		background: rgba(15, 191, 214, 0.8);
+		color: #222;
+		padding: 8px 16px;
+		border-radius: 20px;
+		margin: 6px 4px;
+		font-size: 16px;
+		box-shadow: 1px 2px 8px rgba(0, 0, 0, 0.08);
+	}
+
+	p {
+		font-size: 22px;
+	}
+
+	table, th, td {
+		border: 2px solid rgb(0, 0, 0);
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	.info-flex {
+		display: flex;
+		gap: 24px;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		margin-bottom: 24px;
+		align-items: flex-start;
+	}
+
+	.info-box {
+		background: rgba(240, 38, 38, 0);
+		color: skyblue;
+		border: 2px solid #0fbfd6;
+		border-radius: 16px;
+		padding: 20px;
+		flex: 1 1 250px;
+		min-width: 250px;
+		max-width: 350px;
+		box-sizing: border-box;
+		margin-bottom: 12px;
+		box-shadow: 1px 2px 8px rgba(42, 141, 47, 0.733);
+	}
+
+	.info-box h2 {
+		margin-top: 0;
+	}
+
+	.info-box details {
+		margin-top: 12px;
+	}
+
+	.info-box details summary {
+		cursor: pointer;
+		position: relative;
+		font-weight: bold;
+		transition: color 0.3s;
+		list-style-type: none;
+		outline: none;
+	}
+
+	.info-box details summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.info-box details > summary {
+		list-style: none;
+		list-style-type: none;
+		outline: none;
+		padding-left: 0;
+	}
+
+	.info-box details summary::after {
+		content: "▼";
+		display: inline-block;
+		margin-left: 8px;
+		transition: transform 0.3s;
+	}
+
+	.info-box details[open] summary::after {
+		transform: rotate(180deg);
+	}
+
+	#carousel-container {
+		text-align: center;
+		margin: 48px auto;
+		width: 560px;
+		height: 380px;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+	}
+
+	#carousel-image-container {
+		width: 540px;
+		height: 340px;
+		border-radius: 16px;
+		background: #000000;
+		border: none;
+		padding: 16px;
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-image: url('Topograph.jpg'), repeating-radial-gradient(circle at 30% 30%, red 0%, orange 15%, yellow 30%, green 45%, cyan 60%, blue 75%, violet 90%, red 100%);
+		background-size: 200% 200%, 1200% 1200%;
+		background-position: center, 0% 0%;
+		background-blend-mode: lighten;
+		animation: rgbSmokeRandom 60s linear infinite;
+		filter: blur(0.5px);
+	}
+
+	#carousel-image {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		border-radius: 8px;
+		background: transparent;
+		padding: 0;
+		box-sizing: border-box;
+		transition: transform 0.4s;
+	}
+
+	@@keyframes rgbSmokeRandom {
+		0% {
+			background-position: center, 0% 0%;
+		}
+
+		100% {
+			background-position: center, 100% 100%;
+		}
+	}
+
+	#carousel-container button,
+	.action-btn,
+	#surveySection button {
+		padding: 8px 16px;
+		border-radius: 8px;
+		border: none;
+		background: #222;
+		color: #0fbfd6;
+		font-weight: bold;
+		cursor: pointer;
+		margin: 0 8px;
+		transition: background 0.2s;
+	}
+
+	#carousel-container button:hover,
+	.action-btn:hover,
+	#surveySection button:hover {
+		background: #444;
+	}
+
+	#surveySection input[type="checkbox"] {
+		accent-color: #222;
+	}
+
+	#surveySection input[type="checkbox"]:checked {
+		accent-color: #0fbfd6;
+	}
+
+	.msg {
+		padding: 10px 12px;
+		border-radius: 8px;
+		max-width: 520px;
+		margin: 8px 0;
+		font-size: 16px;
+	}
+
+	.ok {
+		background: rgba(62, 190, 96, .2);
+		border: 1px solid rgba(62, 190, 96, .8);
+	}
+
+	.err {
+		background: rgba(237, 84, 84, .2);
+		border: 1px solid rgba(237, 84, 84, .8);
+	}
+
+	.crud-wrap {
+		background: rgba(0, 0, 0, .33);
+		border: 2px solid #0fbfd6;
+		border-radius: 16px;
+		padding: 18px;
+		margin: 24px 0;
+	}
+
+	.crud-wrap label {
+		display: block;
+		margin-top: 10px;
+		font-size: 16px;
+		color: #9defff;
+	}
+
+	.crud-wrap input,
+	.crud-wrap textarea {
+		width: 100%;
+		box-sizing: border-box;
+		background: rgba(255, 255, 255, .85);
+		border: 1px solid #0fbfd6;
+		border-radius: 8px;
+		padding: 10px;
+		font-size: 15px;
+	}
+
+	.post-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: 16px;
+	}
+
+	.post-card {
+		background: rgba(0, 0, 0, .35);
+		border: 1px solid #0fbfd6;
+		border-radius: 14px;
+		padding: 14px;
+	}
+
+	.post-meta {
+		font-size: 14px;
+		color: #b8f4ff;
+		margin: 4px 0 8px;
+	}
+
+	.post-content {
+		white-space: pre-wrap;
+		color: #e7fcff;
+		line-height: 1.35;
+	}
+
+	.post-actions {
+		margin-top: 10px;
+		display: flex;
+		gap: 8px;
+	}
+
+	.danger {
+		background: #5f1f1f;
+		color: #f7d4d4;
+	}
+
+	.danger:hover {
+		background: #7e2d2d;
+	}
+
+	.small {
+		font-size: 14px;
+		color: #b8f4ff;
+	}
+
+	@@media (max-width: 1100px) {
+		.info-flex {
+			flex-direction: column;
+			gap: 16px;
+		}
+
+		.info-box {
+			max-width: 100%;
+		}
+	}
+
+	@@media (max-width: 700px) {
+		#carousel-container {
+			width: 100%;
+			height: auto;
+		}
+
+		#carousel-image-container {
+			width: 100%;
+			height: 260px;
+			padding: 10px;
+		}
+
+		.crud-wrap {
+			padding: 12px;
+		}
+
+		p {
+			font-size: 18px;
+		}
+	}
+</style>
+
+@code {
+	private readonly List<BlazorApp1.Models.BlogPost> posts = new();
+	private readonly BlazorApp1.Models.BlogPost newPost = new();
+	private BlazorApp1.Models.BlogPost editingPost = new();
+	private bool isEditing;
+	private bool surveyComplete;
+	private string? successMessage;
+	private string? errorMessage;
+
+	private readonly string[] CarouselImages =
+	{
+		"Devteam4.jpeg",
+		"Devteam5.jpeg",
+		"Devteam6.jpeg",
+		"Devteam7.jpeg",
+		"Devteam8.jpeg",
+		"Devteam9.jpeg",
+		"Devteam10.jpeg",
+		"Devteam11.jpeg",
+		"Devteam12.jpeg"
+	};
+
+	private int currentImageIndex;
+	private Timer? carouselTimer;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadPostsAsync();
+
+		carouselTimer = new Timer(async _ =>
+		{
+			await InvokeAsync(() =>
+			{
+				currentImageIndex = (currentImageIndex + 1) % CarouselImages.Length;
+				StateHasChanged();
+			});
+		}, null, 4000, 4000);
+	}
+
+	private void CompleteSurvey()
+	{
+		surveyComplete = true;
+	}
+
+	private void PrevImage()
+	{
+		currentImageIndex = (currentImageIndex - 1 + CarouselImages.Length) % CarouselImages.Length;
+	}
+
+	private void NextImage()
+	{
+		currentImageIndex = (currentImageIndex + 1) % CarouselImages.Length;
+	}
+
+	private async Task LoadPostsAsync()
+	{
+		try
+		{
+			errorMessage = null;
+			successMessage = null;
+			posts.Clear();
+			posts.AddRange(await BlogDataService.GetAllPostsAsync());
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Could not load posts: {ex.Message}";
+		}
+	}
+
+	private async Task CreatePostAsync()
+	{
+		if (string.IsNullOrWhiteSpace(newPost.Title) || string.IsNullOrWhiteSpace(newPost.Author) || string.IsNullOrWhiteSpace(newPost.Content))
+		{
+			errorMessage = "All fields are required to create a post.";
+			successMessage = null;
+			return;
+		}
+
+		try
+		{
+			await BlogDataService.CreatePostAsync(newPost.Title, newPost.Author, newPost.Content);
+			newPost.Title = string.Empty;
+			newPost.Author = string.Empty;
+			newPost.Content = string.Empty;
+			successMessage = "Post created successfully.";
+			errorMessage = null;
+			await LoadPostsAsync();
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Create failed: {ex.Message}";
+			successMessage = null;
+		}
+	}
+
+	private void StartEdit(BlazorApp1.Models.BlogPost post)
+	{
+		isEditing = true;
+		editingPost = new BlazorApp1.Models.BlogPost
+		{
+			Id = post.Id,
+			Title = post.Title,
+			Author = post.Author,
+			Content = post.Content,
+			CreatedAt = post.CreatedAt
+		};
+		errorMessage = null;
+		successMessage = null;
+	}
+
+	private async Task UpdatePostAsync()
+	{
+		if (editingPost.Id <= 0 || string.IsNullOrWhiteSpace(editingPost.Title) || string.IsNullOrWhiteSpace(editingPost.Author) || string.IsNullOrWhiteSpace(editingPost.Content))
+		{
+			errorMessage = "All fields are required to update a post.";
+			successMessage = null;
+			return;
+		}
+
+		try
+		{
+			await BlogDataService.UpdatePostAsync(editingPost.Id, editingPost.Title, editingPost.Author, editingPost.Content);
+			isEditing = false;
+			editingPost = new BlazorApp1.Models.BlogPost();
+			successMessage = "Post updated successfully.";
+			errorMessage = null;
+			await LoadPostsAsync();
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Update failed: {ex.Message}";
+			successMessage = null;
+		}
+	}
+
+	private void CancelEdit()
+	{
+		isEditing = false;
+		editingPost = new BlazorApp1.Models.BlogPost();
+		errorMessage = null;
+		successMessage = null;
+	}
+
+	private async Task DeletePostAsync(int postId)
+	{
+		try
+		{
+			await BlogDataService.DeletePostAsync(postId);
+			successMessage = "Post deleted successfully.";
+			errorMessage = null;
+			await LoadPostsAsync();
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Delete failed: {ex.Message}";
+			successMessage = null;
+		}
+	}
+
+	public void Dispose()
+	{
+		carouselTimer?.Dispose();
+	}
+}

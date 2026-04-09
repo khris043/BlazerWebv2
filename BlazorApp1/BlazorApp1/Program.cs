@@ -1,12 +1,20 @@
 using BlazorApp1.Components;
+using BlazorApp1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddScoped<BlogDataService>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var blogDataService = scope.ServiceProvider.GetRequiredService<BlogDataService>();
+    await blogDataService.InitializeDatabaseAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
