@@ -1,5 +1,6 @@
 using BlazorApp1.Components;
 using BlazorApp1.Services;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,12 +10,6 @@ builder.Services.AddRazorComponents()
 builder.Services.AddScoped<BlogDataService>();
 
 var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
-{
-    var blogDataService = scope.ServiceProvider.GetRequiredService<BlogDataService>();
-    await blogDataService.InitializeDatabaseAsync();
-}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -31,5 +26,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.Logger.LogInformation("Blazor app started. Blog database will initialize on first use.");
 
 app.Run();

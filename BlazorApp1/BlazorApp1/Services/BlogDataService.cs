@@ -1,19 +1,39 @@
 using BlazorApp1.Models;
 using Microsoft.Data.SqlClient;
+using System.Threading;
 
 namespace BlazorApp1.Services;
 
 public class BlogDataService
 {
-    private readonly IConfiguration configuration;
+    private static readonly SemaphoreSlim InitializationLock = new(1, 1);
+    private static volatile bool isInitialized;
 
-    public BlogDataService(IConfiguration configuration)
+    private readonly IConfiguration configuration;
+    private readonly ILogger<BlogDataService> logger;
+
+    public BlogDataService(IConfiguration configuration, ILogger<BlogDataService> logger)
     {
         this.configuration = configuration;
+        this.logger = logger;
     }
 
     public async Task InitializeDatabaseAsync()
     {
+        if (isInitialized)
+        {
+            return;
+        }
+
+        await InitializationLock.WaitAsync();
+
+        try
+        {
+            if (isInitialized)
+            {
+                return;
+            }
+
         const string sql = """
             IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='BlogPosts' AND xtype='U')
             BEGIN
@@ -27,14 +47,22 @@ public class BlogDataService
             END
             """;
 
-        await using var connection = new SqlConnection(GetConnectionString());
-        await connection.OpenAsync();
-        await using var command = new SqlCommand(sql, connection);
-        await command.ExecuteNonQueryAsync();
+            await using var connection = new SqlConnection(GetConnectionString());
+            await connection.OpenAsync();
+            await using var command = new SqlCommand(sql, connection);
+            await command.ExecuteNonQueryAsync();
+            isInitialized = true;
+        }
+        finally
+        {
+            InitializationLock.Release();
+        }
     }
 
     public async Task<List<BlogPost>> GetAllPostsAsync()
     {
+        await InitializeDatabaseAsync();
+
         const string sql = "SELECT Id, Title, Author, Content, CreatedAt FROM BlogPosts ORDER BY Id DESC";
         var posts = new List<BlogPost>();
 
@@ -60,6 +88,8 @@ public class BlogDataService
 
     public async Task CreatePostAsync(string title, string author, string content)
     {
+        await InitializeDatabaseAsync();
+
         const string sql = "INSERT INTO BlogPosts (Title, Author, Content) VALUES (@Title, @Author, @Content)";
 
         await using var connection = new SqlConnection(GetConnectionString());
@@ -73,6 +103,8 @@ public class BlogDataService
 
     public async Task UpdatePostAsync(int id, string title, string author, string content)
     {
+        await InitializeDatabaseAsync();
+
         const string sql = "UPDATE BlogPosts SET Title = @Title, Author = @Author, Content = @Content WHERE Id = @Id";
 
         await using var connection = new SqlConnection(GetConnectionString());
@@ -87,6 +119,8 @@ public class BlogDataService
 
     public async Task DeletePostAsync(int id)
     {
+        await InitializeDatabaseAsync();
+
         const string sql = "DELETE FROM BlogPosts WHERE Id = @Id";
 
         await using var connection = new SqlConnection(GetConnectionString());
@@ -98,18 +132,37 @@ public class BlogDataService
 
     private string GetConnectionString()
     {
-        var envConnectionString = Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTION_STRING");
-        if (!string.IsNullOrWhiteSpace(envConnectionString))
+        var candidates = new[]
         {
-            return envConnectionString;
+            Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTION_STRING"),
+            Environment.GetEnvironmentVariable("SQLAZURECONNSTR_BlogDb"),
+            Environment.GetEnvironmentVariable("ConnectionStrings__BlogDb"),
+            configuration.GetConnectionString("BlogDb")
+        };
+
+        foreach (var candidate in candidates)
+        {
+            if (IsUsableConnectionString(candidate))
+            {
+                return candidate!;
+            }
         }
 
-        var configuredConnectionString = configuration.GetConnectionString("BlogDb");
-        if (!string.IsNullOrWhiteSpace(configuredConnectionString))
+        logger.LogWarning("No usable SQL connection string found for BlogDb.");
+
+        throw new InvalidOperationException("No usable SQL connection string found. Set AZURE_SQL_CONNECTION_STRING, SQLAZURECONNSTR_BlogDb, or ConnectionStrings:BlogDb.");
+    }
+
+    private static bool IsUsableConnectionString(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
         {
-            return configuredConnectionString;
+            return false;
         }
 
-        throw new InvalidOperationException("No SQL connection string found. Set AZURE_SQL_CONNECTION_STRING or ConnectionStrings:BlogDb.");
+        return !value.Contains("YOUR_SERVER", StringComparison.OrdinalIgnoreCase)
+            && !value.Contains("YOUR_DATABASE", StringComparison.OrdinalIgnoreCase)
+            && !value.Contains("YOUR_USER", StringComparison.OrdinalIgnoreCase)
+            && !value.Contains("YOUR_PASSWORD", StringComparison.OrdinalIgnoreCase);
     }
 }
