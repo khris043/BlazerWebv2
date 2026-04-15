@@ -5,7 +5,7 @@
 
 <PageTitle>Soburd Blog</PageTitle>
 
-<div id="mainContent" style="padding: 32px 8vw; box-sizing: border-box;">
+<div id="mainContent" style="padding: 24px clamp(16px, 3vw, 40px); box-sizing: border-box;">
 	<h1>Welcome to Soburd</h1>
 	<p id="introText">here you'll learn about what we do and how we do it. </p>
 
@@ -108,7 +108,7 @@
 				@if (isEditing)
 				{
 					<h3>Editing Post #@editingPost.Id</h3>
-					<EditForm Model="editingPost" OnValidSubmit="UpdatePostAsync">
+					<EditForm Model="editingPost" OnValidSubmit="UpdatePostAsync" FormName="EditPostForm">
 						<label>Title</label>
 						<InputText @bind-Value="editingPost.Title" />
 
@@ -126,7 +126,7 @@
 				else
 				{
 					<h3>Create a New Post</h3>
-					<EditForm Model="newPost" OnValidSubmit="CreatePostAsync">
+					<EditForm Model="newPost" OnValidSubmit="CreatePostAsync" FormName="CreatePostForm">
 						<label>Title</label>
 						<InputText @bind-Value="newPost.Title" />
 
@@ -172,7 +172,7 @@
 
 <style>
 	#hiddenContent {
-		padding: 32px 8vw;
+		padding: 0;
 		box-sizing: border-box;
 	}
 
@@ -224,8 +224,8 @@
 	.info-flex {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 24px;
-		margin-bottom: 24px;
+		gap: 40px;
+		margin-bottom: 32px;
 		align-items: stretch;
 	}
 
@@ -244,6 +244,7 @@
 
 	.info-box h2 {
 		margin-top: 0;
+		white-space: nowrap;
 	}
 
 	.info-box details {
@@ -450,6 +451,10 @@
 	}
 
 	@@media (max-width: 700px) {
+		.info-box h2 {
+			white-space: normal;
+		}
+
 		#carousel-container {
 			width: 100%;
 			height: auto;
