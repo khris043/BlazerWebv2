@@ -3,8 +3,9 @@
 
 <PageTitle>Blog</PageTitle>
 
-<div style="padding: 24px clamp(16px, 3vw, 40px); color: skyblue; box-sizing: border-box;">
+<div id="blogContent" style="padding: 24px clamp(16px, 3vw, 40px); color: skyblue; box-sizing: border-box;">
 	<h1>Blog</h1>
+	<p class="intro-copy">Write, edit, and manage your posts here using the same Soburd interface as the intro page.</p>
 
 	<div class="crud-wrap">
 		<h2>Blog Post Manager</h2>
@@ -87,12 +88,50 @@
 </div>
 
 <style>
+	html, body {
+		height: 100%;
+		min-height: 100%;
+		margin: 0;
+		padding: 0;
+	}
+
+	body {
+		background-image: url('ChatGPTMusic.png');
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center -113px;
+		background-attachment: fixed;
+		background-color: #f0f0f0;
+		font-family: 'Times New Roman', Times, serif;
+		font-size: 18px;
+		min-height: 100vh;
+		color: skyblue;
+		box-sizing: border-box;
+	}
+
+	#blogContent {
+		max-width: 1240px;
+	}
+
+	#blogContent h1,
+	#blogContent h2,
+	#blogContent h3,
+	#blogContent p {
+		color: skyblue;
+	}
+
+	.intro-copy {
+		font-size: 22px;
+		margin-bottom: 20px;
+	}
+
 	.crud-wrap {
 		background: rgba(0, 0, 0, .33);
 		border: 2px solid #0fbfd6;
 		border-radius: 16px;
-		padding: 18px;
+		padding: 22px;
 		margin: 24px 0;
+		box-shadow: 1px 2px 8px rgba(42, 141, 47, 0.733);
 	}
 
 	.crud-wrap label {
@@ -144,9 +183,10 @@
 
 	.post-card {
 		background: rgba(0, 0, 0, .35);
-		border: 1px solid #0fbfd6;
-		border-radius: 14px;
-		padding: 14px;
+		border: 2px solid #0fbfd6;
+		border-radius: 16px;
+		padding: 18px;
+		box-shadow: 1px 2px 8px rgba(42, 141, 47, 0.733);
 	}
 
 	.post-meta {
@@ -198,6 +238,16 @@
 	.danger:hover {
 		background: #7e2d2d;
 	}
+
+	@@media (max-width: 700px) {
+		.intro-copy {
+			font-size: 18px;
+		}
+
+		.crud-wrap {
+			padding: 14px;
+		}
+	}
 </style>
 
 @code {
@@ -224,7 +274,7 @@
 		}
 		catch (Exception ex)
 		{
-			errorMessage = $"Could not load posts: {ex.Message}";
+			errorMessage = ToDisplayMessage("Could not load posts", ex);
 		}
 	}
 
@@ -249,7 +299,7 @@
 		}
 		catch (Exception ex)
 		{
-			errorMessage = $"Create failed: {ex.Message}";
+			errorMessage = ToDisplayMessage("Create failed", ex);
 			successMessage = null;
 		}
 	}
@@ -289,7 +339,7 @@
 		}
 		catch (Exception ex)
 		{
-			errorMessage = $"Update failed: {ex.Message}";
+			errorMessage = ToDisplayMessage("Update failed", ex);
 			successMessage = null;
 		}
 	}
@@ -313,8 +363,18 @@
 		}
 		catch (Exception ex)
 		{
-			errorMessage = $"Delete failed: {ex.Message}";
+			errorMessage = ToDisplayMessage("Delete failed", ex);
 			successMessage = null;
 		}
+	}
+
+	private static string ToDisplayMessage(string operation, Exception ex)
+	{
+		if (ex is InvalidOperationException && ex.Message.Contains("No usable SQL connection string found", StringComparison.OrdinalIgnoreCase))
+		{
+			return $"{operation}: configure ConnectionStrings:BlogDb for your Azure SQL database before using blog CRUD.";
+		}
+
+		return $"{operation}: {ex.Message}";
 	}
 }
