@@ -1,5 +1,4 @@
 using BlazorApp1.Components;
-using BlazorApp1.Services;
 using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,7 +6,6 @@ var builder = WebApplication.CreateBuilder(args);
 //  container
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddScoped<BlogDataService>();
 
 var app = builder.Build();
 
