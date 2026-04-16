@@ -8,6 +8,8 @@ public class BlogDataService
 {
     private static readonly SemaphoreSlim InitializationLock = new(1, 1);
     private static volatile bool isInitialized;
+    private const int MinimumConnectTimeoutSeconds = 90;
+    private const int OpenConnectionMaxAttempts = 3;
 
     private readonly IConfiguration configuration;
     private readonly ILogger<BlogDataService> logger;
@@ -47,8 +49,7 @@ public class BlogDataService
             END
             """;
 
-            await using var connection = new SqlConnection(GetConnectionString());
-            await connection.OpenAsync();
+            await using var connection = await OpenConnectionAsync();
             await using var command = new SqlCommand(sql, connection);
             await command.ExecuteNonQueryAsync();
             isInitialized = true;
@@ -66,8 +67,7 @@ public class BlogDataService
         const string sql = "SELECT Id, Title, Author, Content, CreatedAt FROM BlogPosts ORDER BY Id DESC";
         var posts = new List<BlogPost>();
 
-        await using var connection = new SqlConnection(GetConnectionString());
-        await connection.OpenAsync();
+        await using var connection = await OpenConnectionAsync();
         await using var command = new SqlCommand(sql, connection);
         await using var reader = await command.ExecuteReaderAsync();
 
@@ -92,8 +92,7 @@ public class BlogDataService
 
         const string sql = "INSERT INTO BlogPosts (Title, Author, Content) VALUES (@Title, @Author, @Content)";
 
-        await using var connection = new SqlConnection(GetConnectionString());
-        await connection.OpenAsync();
+        await using var connection = await OpenConnectionAsync();
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Title", title);
         command.Parameters.AddWithValue("@Author", author);
@@ -107,8 +106,7 @@ public class BlogDataService
 
         const string sql = "UPDATE BlogPosts SET Title = @Title, Author = @Author, Content = @Content WHERE Id = @Id";
 
-        await using var connection = new SqlConnection(GetConnectionString());
-        await connection.OpenAsync();
+        await using var connection = await OpenConnectionAsync();
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Id", id);
         command.Parameters.AddWithValue("@Title", title);
@@ -123,11 +121,47 @@ public class BlogDataService
 
         const string sql = "DELETE FROM BlogPosts WHERE Id = @Id";
 
-        await using var connection = new SqlConnection(GetConnectionString());
-        await connection.OpenAsync();
+        await using var connection = await OpenConnectionAsync();
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Id", id);
         await command.ExecuteNonQueryAsync();
+    }
+
+    private async Task<SqlConnection> OpenConnectionAsync(CancellationToken cancellationToken = default)
+    {
+        var connectionString = GetConnectionString();
+        Exception? lastError = null;
+
+        for (var attempt = 1; attempt <= OpenConnectionMaxAttempts; attempt++)
+        {
+            var connection = new SqlConnection(connectionString);
+
+            try
+            {
+                await connection.OpenAsync(cancellationToken);
+                return connection;
+            }
+            catch (SqlException ex) when (attempt < OpenConnectionMaxAttempts && IsTransientConnectIssue(ex))
+            {
+                lastError = ex;
+                await connection.DisposeAsync();
+
+                logger.LogWarning(
+                    ex,
+                    "SQL open failed (attempt {Attempt}/{MaxAttempts}). Retrying...",
+                    attempt,
+                    OpenConnectionMaxAttempts);
+
+                await Task.Delay(TimeSpan.FromSeconds(attempt * 2), cancellationToken);
+            }
+        }
+
+        throw new InvalidOperationException("Failed to open SQL connection after retries.", lastError);
+    }
+
+    private static bool IsTransientConnectIssue(SqlException ex)
+    {
+        return ex.Number is -2 or 40197 or 40501 or 40613 or 49918 or 49919 or 49920;
     }
 
     private string GetConnectionString()
@@ -144,7 +178,7 @@ public class BlogDataService
         {
             if (IsUsableConnectionString(candidate))
             {
-                return candidate!;
+                return NormalizeConnectionString(candidate!);
             }
         }
 
@@ -164,5 +198,28 @@ public class BlogDataService
             && !value.Contains("YOUR_DATABASE", StringComparison.OrdinalIgnoreCase)
             && !value.Contains("YOUR_USER", StringComparison.OrdinalIgnoreCase)
             && !value.Contains("YOUR_PASSWORD", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeConnectionString(string connectionString)
+    {
+        var builder = new SqlConnectionStringBuilder(connectionString)
+        {
+            ConnectTimeout = Math.Max(
+                new SqlConnectionStringBuilder(connectionString).ConnectTimeout,
+                MinimumConnectTimeoutSeconds),
+            ConnectRetryCount = Math.Max(
+                new SqlConnectionStringBuilder(connectionString).ConnectRetryCount,
+                3),
+            ConnectRetryInterval = Math.Max(
+                new SqlConnectionStringBuilder(connectionString).ConnectRetryInterval,
+                10)
+        };
+
+        if (!builder.ContainsKey("TrustServerCertificate"))
+        {
+            builder.TrustServerCertificate = true;
+        }
+
+        return builder.ConnectionString;
     }
 }
