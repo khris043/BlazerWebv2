@@ -1,0 +1,348 @@
+﻿@page "/"
+@implements IDisposable
+
+<PageTitle>Soburd Blog</PageTitle>
+
+<div id="mainContent" style="padding: 24px clamp(16px, 3vw, 40px); box-sizing: border-box;">
+	<h1>Welcome to Soburd</h1>
+	<p id="introText">here you'll learn about what we do and how we do it. </p>
+
+	<div id="hiddenContent">
+			<div class="info-flex">
+				<div class="info-box">
+					<h2>What we do</h2>
+					<p>We are a software development company that works to fill in "crutial" missing parts of the internet. Our team of "experienced" developers work closely with "stuff" to understand their use and deliver high-quality products that exceed expectations.</p>
+					<details>
+						<summary>Click to see fun facts about our team &#x25BC;</summary>
+						<ul>
+							<li>Khris loves to mess around with things until he learns about them</li>
+							<li>Fill loves making random squads in games.</li>
+							<li>Mike likes to dance on Jynxi's head.</li>
+						</ul>
+						<img src="Devteam.jpg" alt="Development Team" style="max-width:200px; border-radius:12px; margin-top:8px;">
+					</details>
+				</div>
+
+				<div class="info-box">
+					<h2>How we do it</h2>
+					<p>We follow a structured development process that includes requirements gathering, design, development, testing, and deployment. Our "team" uses the latest technologies and best practices to ensure that our products are reliable, scalable, and secure.</p>
+					<details>
+						<summary>Click to see fun facts about our team &#x25BC;</summary>
+						<ul>
+							<li>Khris spent many years in theatre to realize that sounds are one of his favorite things.</li>
+							<li>Fill loves making random squads in games.</li>
+							<li>Mike loves to play Fortnite with Neil.</li>
+						</ul>
+						<img src="Devteam3.jpeg" alt="Development Team" style="max-width:200px; border-radius:12px; margin-top:8px;">
+					</details>
+				</div>
+
+				<div class="info-box">
+					<h2>Our Team</h2>
+					<p>Our team is made up of "experienced developers" and idiots who are passionate about creating innovative solutions. We work like loners to ensure that every project is a success half of the time.</p>
+					<details>
+						<summary>Click to see even more fun facts about our team &#x25BC;</summary>
+						<ul>
+							<li>Khris once stayed up for 24 hours straight!</li>
+							<li>Fill loves making Neil angry.</li>
+							<li>Mike sketches UI ideas on Neil's GIANT FOREHEAD.</li>
+						</ul>
+						<img src="Devteam2.jpeg" alt="Development Team" style="max-width:200px; border-radius:12px; margin-top:8px;">
+					</details>
+				</div>
+			</div>
+
+			<table>
+				<tr>
+					<th>Name</th>
+					<th>Role</th>
+					<th>Experience</th>
+				</tr>
+				<tr>
+					<td><span class="bubble">Khris Patel</span></td>
+					<td><span class="bubble">Lead Developer</span></td>
+					<td><span class="bubble">3 years</span></td>
+				</tr>
+				<tr>
+					<td><span class="bubble">Fill Smith</span></td>
+					<td><span class="bubble">Squad Randomizer</span></td>
+					<td><span class="bubble">8 years</span></td>
+				</tr>
+				<tr>
+					<td><span class="bubble">Mike Johnson</span></td>
+					<td><span class="bubble">UI/UX Designer</span></td>
+					<td><span class="bubble">5 years</span></td>
+				</tr>
+			</table>
+
+			<div id="carousel-container">
+				<div id="carousel-image-container">
+					<img id="carousel-image" src="@CarouselImages[currentImageIndex]" alt="Carousel Image">
+				</div>
+				<div style="margin-top:12px;">
+					<button @onclick="PrevImage">&#8592; Prev</button>
+					<button @onclick="NextImage">Next &#8594;</button>
+				</div>
+			</div>
+
+			<h2>Contact Us</h2>
+			<p>If you're interested in learning more about our services or would like to discuss a potential project, please don't hesitate to contact us. We look forward to hearing from you!</p>
+			<p>at: khrispatel2894@yahoo.com<br>or call yours truly at: 620-605-0019</p>
+
+		</div>
+</div>
+
+<style>
+	#hiddenContent {
+		padding: 0;
+		box-sizing: border-box;
+	}
+
+	html, body {
+		height: 100%;
+		min-height: 100%;
+		margin: 0;
+		padding: 0;
+	}
+
+	body {
+		background-image: url('ChatGPTMusic.png');
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center -113px;
+		background-attachment: fixed;
+		background-color: #f0f0f0;
+		font-family: 'Times New Roman', Times, serif;
+		font-size: 18px;
+		min-height: 100vh;
+		color: skyblue;
+		box-sizing: border-box;
+	}
+
+	.bubble {
+		display: inline-block;
+		background: rgba(15, 191, 214, 0.8);
+		color: #222;
+		padding: 8px 16px;
+		border-radius: 20px;
+		margin: 6px 4px;
+		font-size: 16px;
+		box-shadow: 1px 2px 8px rgba(0, 0, 0, 0.08);
+	}
+
+	p {
+		font-size: 22px;
+	}
+
+	table, th, td {
+		border: 2px solid rgb(0, 0, 0);
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	.info-flex {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 40px;
+		margin-bottom: 32px;
+		align-items: stretch;
+	}
+
+	.info-box {
+		background: rgba(240, 38, 38, 0);
+		color: skyblue;
+		border: 2px solid #0fbfd6;
+		border-radius: 16px;
+		padding: 20px;
+		min-width: 0;
+		max-width: none;
+		box-sizing: border-box;
+		height: 100%;
+		box-shadow: 1px 2px 8px rgba(42, 141, 47, 0.733);
+	}
+
+	.info-box h2 {
+		margin-top: 0;
+		white-space: nowrap;
+	}
+
+	.info-box details {
+		margin-top: 12px;
+	}
+
+	.info-box details summary {
+		cursor: pointer;
+		position: relative;
+		font-weight: bold;
+		transition: color 0.3s;
+		list-style-type: none;
+		outline: none;
+	}
+
+	.info-box details summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.info-box details > summary {
+		list-style: none;
+		list-style-type: none;
+		outline: none;
+		padding-left: 0;
+	}
+
+	.info-box details summary::after {
+		content: "▼";
+		display: inline-block;
+		margin-left: 8px;
+		transition: transform 0.3s;
+	}
+
+	.info-box details[open] summary::after {
+		transform: rotate(180deg);
+	}
+
+	#carousel-container {
+		text-align: center;
+		margin: 48px auto;
+		width: 560px;
+		height: 380px;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+	}
+
+	#carousel-image-container {
+		width: 540px;
+		height: 340px;
+		border-radius: 16px;
+		background: #000000;
+		border: none;
+		padding: 16px;
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-image: url('Topograph.jpg'), repeating-radial-gradient(circle at 30% 30%, red 0%, orange 15%, yellow 30%, green 45%, cyan 60%, blue 75%, violet 90%, red 100%);
+		background-size: 200% 200%, 1200% 1200%;
+		background-position: center, 0% 0%;
+		background-blend-mode: lighten;
+		animation: rgbSmokeRandom 60s linear infinite;
+		filter: blur(0.5px);
+	}
+
+	#carousel-image {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		border-radius: 8px;
+		background: transparent;
+		padding: 0;
+		box-sizing: border-box;
+		transition: transform 0.4s;
+	}
+
+	@@keyframes rgbSmokeRandom {
+		0% {
+			background-position: center, 0% 0%;
+		}
+
+		100% {
+			background-position: center, 100% 100%;
+		}
+	}
+
+	#carousel-container button {
+		padding: 8px 16px;
+		border-radius: 8px;
+		border: none;
+		background: #222;
+		color: #0fbfd6;
+		font-weight: bold;
+		cursor: pointer;
+		margin: 0 8px;
+		transition: background 0.2s;
+	}
+
+	#carousel-container button:hover {
+		background: #444;
+	}
+
+	@@media (max-width: 1100px) {
+		.info-flex {
+			grid-template-columns: 1fr;
+		}
+
+		.info-box {
+			max-width: 100%;
+		}
+	}
+
+	@@media (max-width: 700px) {
+		.info-box h2 {
+			white-space: normal;
+		}
+
+		#carousel-container {
+			width: 100%;
+			height: auto;
+		}
+
+		#carousel-image-container {
+			width: 100%;
+			height: 260px;
+			padding: 10px;
+		}
+
+		p {
+			font-size: 18px;
+		}
+	}
+</style>
+
+@code {
+	private readonly string[] CarouselImages =
+	{
+		"Devteam4.jpeg",
+		"Devteam6.jpeg",
+		"Devteam7.jpeg",
+		"Devteam8.jpeg",
+		"Devteam9.jpeg",
+		"Devteam10.jpeg",
+		"Devteam11.jpeg",
+		"Devteam12.jpeg"
+	};
+
+	private int currentImageIndex;
+	private Timer? carouselTimer;
+
+	protected override void OnInitialized()
+	{
+		carouselTimer = new Timer(_ =>
+		{
+			_ = InvokeAsync(() =>
+			{
+				currentImageIndex = (currentImageIndex + 1) % CarouselImages.Length;
+				StateHasChanged();
+			});
+		}, null, 4000, 4000);
+	}
+
+	private void PrevImage()
+	{
+		currentImageIndex = (currentImageIndex - 1 + CarouselImages.Length) % CarouselImages.Length;
+	}
+
+	private void NextImage()
+	{
+		currentImageIndex = (currentImageIndex + 1) % CarouselImages.Length;
+	}
+
+	public void Dispose()
+	{
+		carouselTimer?.Dispose();
+	}
+}
